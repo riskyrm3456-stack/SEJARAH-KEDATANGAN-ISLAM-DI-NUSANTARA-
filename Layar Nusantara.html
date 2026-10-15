@@ -1,0 +1,671 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Layar Nusantara</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Konsep: pelayaran dagang di atas peta laut. Satu kolom, kartu soal di tengah, jalur kapal di atas. */
+:root {
+  --bg: #E9EFEF;
+  --surface: #F7FAFA;
+  --ink: #12303A;
+  --muted: #4C6770;
+  --line: #C3D2D4;
+  --accent: #0B6E7E;
+  --accent-ink: #FFFFFF;
+  --gold: #8F5A00;
+  --good: #1E7A4C;
+  --good-bg: #DDF0E5;
+  --bad: #B0392E;
+  --bad-bg: #F8E1DD;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1D24;
+    --surface: #12282F;
+    --ink: #E1EEF0;
+    --muted: #9BB5BB;
+    --line: #27474F;
+    --accent: #4DC1CF;
+    --accent-ink: #06222A;
+    --gold: #E2A93B;
+    --good: #5FD08F;
+    --good-bg: #12372A;
+    --bad: #FF8A7C;
+    --bad-bg: #401E1A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1D24;
+  --surface: #12282F;
+  --ink: #E1EEF0;
+  --muted: #9BB5BB;
+  --line: #27474F;
+  --accent: #4DC1CF;
+  --accent-ink: #06222A;
+  --gold: #E2A93B;
+  --good: #5FD08F;
+  --good-bg: #12372A;
+  --bad: #FF8A7C;
+  --bad-bg: #401E1A;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  padding-block: 18px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Kepala: nama + skor */
+.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; letter-spacing: -0.02em; line-height: 1; margin: 0; }
+.brand small { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.hud { display: flex; gap: 18px; font-family: var(--font-mono); }
+.hud div { display: flex; flex-direction: column; align-items: flex-end; }
+.hud span { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.hud b { font-size: 1.25rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.hud .streak b { color: var(--gold); }
+
+/* Jalur kapal */
+.track { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.track li { min-width: 0; }
+.track .bar { display: block; height: 5px; border-radius: 3px; background: var(--line); }
+.track .lbl { display: block; margin-top: 6px; font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track .done .bar { background: var(--accent); }
+.track .now .bar { background: linear-gradient(90deg, var(--accent) 50%, var(--line) 50%); }
+.track .now .lbl { color: var(--ink); font-weight: 500; }
+
+/* Kartu */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 20px; display: flex; flex-direction: column; gap: 16px; }
+.card h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; line-height: 1.15; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.card p { margin: 0; max-width: 62ch; }
+.meta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.prog { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }
+.era { font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent); letter-spacing: 0.04em; }
+.q { font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; line-height: 1.35; margin: 0; text-wrap: pretty; }
+.hint { color: var(--muted); font-size: 0.92rem; }
+
+/* Tombol */
+.btn { align-self: flex-start; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 12px 22px; font-weight: 600; min-height: 46px; }
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.opts { display: grid; gap: 10px; }
+.opts.grid { grid-template-columns: 1fr 1fr; }
+.opt { text-align: left; background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; min-height: 48px; line-height: 1.4; }
+.opt:hover:not(:disabled) { border-color: var(--accent); }
+.opt:disabled { cursor: default; }
+.opt.ok { border-color: var(--good); background: var(--good-bg); }
+.opt.bad { border-color: var(--bad); background: var(--bad-bg); }
+.opt.dim { opacity: 0.55; }
+
+/* Umpan balik */
+.fb { border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.fb.ok { background: var(--good-bg); border: 1px solid var(--good); }
+.fb.bad { background: var(--bad-bg); border: 1px solid var(--bad); }
+.fb strong { font-family: var(--font-display); font-size: 1.05rem; }
+.fb.ok strong { color: var(--good); }
+.fb.bad strong { color: var(--bad); }
+.fb .coord { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
+
+/* Pencocokan teori */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { background: var(--bg); border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 16px; font-weight: 600; min-height: 42px; }
+.clues { display: grid; gap: 8px; }
+.clue { text-align: left; background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; line-height: 1.45; font-size: 0.95rem; }
+.chip:hover:not(:disabled), .clue:hover:not(:disabled) { border-color: var(--accent); }
+.chip.sel, .clue.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.chip.ok, .clue.ok { border-color: var(--good); background: var(--good-bg); box-shadow: none; }
+.chip:disabled, .clue:disabled { cursor: default; }
+.clue.ok { opacity: 0.85; }
+.shake { animation: shake 0.4s; border-color: var(--bad) !important; background: var(--bad-bg) !important; }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+/* Peta laut */
+.chart { position: relative; width: 100%; aspect-ratio: 700 / 380; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.chart svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.chart .grid { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; fill: none; }
+.chart .equator { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 4; opacity: 0.5; vector-effect: non-scaling-stroke; fill: none; }
+.chart .route { stroke: var(--accent); stroke-width: 1.8; stroke-dasharray: 6 6; opacity: 0.55; vector-effect: non-scaling-stroke; fill: none; }
+.chart .src { position: absolute; left: 6px; top: 6px; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.04em; color: var(--muted); max-width: 40%; line-height: 1.3; }
+.port { position: absolute; width: 40px; height: 40px; transform: translate(-50%, -50%); background: none; border: 0; padding: 0; border-radius: 50%; }
+.port .dot { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); box-shadow: 0 0 0 1.5px var(--accent); transition: transform 0.15s; }
+.port:hover:not(:disabled) .dot { transform: scale(1.35); }
+.port:disabled { cursor: default; }
+.port .nm { position: absolute; left: 50%; top: 50%; font-size: 0.78rem; font-weight: 600; white-space: nowrap; color: var(--ink); pointer-events: none; }
+.port .nm.start { transform: translate(14px, -50%); }
+.port .nm.end { transform: translate(calc(-100% - 14px), -50%); }
+.port .nm.above { transform: translate(-50%, calc(-100% - 12px)); }
+.port .nm.below { transform: translate(-50%, 12px); }
+.port.ok .dot { background: var(--good); box-shadow: 0 0 0 2px var(--good), 0 0 0 8px var(--good-bg); }
+.port.bad .dot { background: var(--bad); box-shadow: 0 0 0 2px var(--bad), 0 0 0 8px var(--bad-bg); }
+.port.dim { opacity: 0.5; }
+.cap { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+
+/* Menu dan hasil */
+.stages { display: grid; gap: 10px; }
+.stg { text-align: left; background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; gap: 14px; align-items: center; }
+.stg:hover { border-color: var(--accent); }
+.stg b { font-family: var(--font-display); font-size: 1.05rem; display: block; }
+.stg span.sub { color: var(--muted); font-size: 0.88rem; display: block; }
+.stars { font-size: 1.15rem; letter-spacing: 2px; color: var(--gold); white-space: nowrap; }
+.big { font-family: var(--font-display); font-weight: 800; font-size: 2.6rem; line-height: 1; letter-spacing: -0.02em; }
+.stats { display: flex; flex-wrap: wrap; gap: 22px; font-family: var(--font-mono); }
+.stats div { display: flex; flex-direction: column; }
+.stats span { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.stats b { font-size: 1.3rem; font-weight: 500; }
+.recap { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 6px; max-width: 62ch; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+@media (max-width: 480px) {
+  .opts.grid { grid-template-columns: 1fr; }
+  .brand { font-size: 1.4rem; }
+  .card { padding: 18px 16px; }
+  .port .nm { font-size: 0.72rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shake { animation: none; }
+  .prog i, .port .dot { transition: none; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand">Layar Nusantara<small>Islam masuk ke Nusantara</small></h1>
+    <div class="hud" aria-label="Skor">
+      <div><span>Skor</span><b id="score">0</b></div>
+      <div class="streak"><span>Beruntun</span><b id="streak">0</b></div>
+    </div>
+  </header>
+  <ol class="track" id="track"></ol>
+  <main id="view"></main>
+</div>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function stars(n) { return "★".repeat(n) + "☆".repeat(3 - n); }
+
+  /* ---------- Penyimpanan bintang terbaik (per pemain, opsional) ---------- */
+  var KEY = "layar-nusantara-best";
+  function loadBest() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function saveBest(id, n) { try { var b = loadBest(); if ((b[id] || 0) < n) { b[id] = n; localStorage.setItem(KEY, JSON.stringify(b)); } } catch (e) {} }
+
+  /* ---------- Peta ---------- */
+  var PORTS = [
+    { id: "pasai",  name: "Samudra Pasai", lat: 5.2,  lon: 97.1,   pos: "start" },
+    { id: "malaka", name: "Malaka",        lat: 2.2,  lon: 102.25, pos: "above" },
+    { id: "banten", name: "Banten",        lat: -6.0, lon: 106.15, pos: "end" },
+    { id: "demak",  name: "Demak",         lat: -6.9, lon: 110.6,  pos: "above" },
+    { id: "gresik", name: "Gresik",        lat: -7.15, lon: 112.65, pos: "below" },
+    { id: "banjar", name: "Banjar",        lat: -3.3, lon: 114.6,  pos: "above" },
+    { id: "gowa",   name: "Gowa-Tallo",    lat: -5.15, lon: 119.4, pos: "below" },
+    { id: "ternate", name: "Ternate",      lat: 0.8,  lon: 127.4,  pos: "above" }
+  ];
+  var ROUTE = ["pasai", "malaka", "banten", "demak", "gresik", "banjar", "gowa", "ternate"];
+  var VW = 700, VH = 380, PX = 18.86;
+  function proj(lat, lon) { return [(lon - 94) / 35 * 660 + 20, (8 - lat) * PX + 30]; }
+  function portById(id) { return PORTS.filter(function (p) { return p.id === id; })[0]; }
+  function fmtCoord(p) {
+    var la = Math.abs(p.lat).toString().replace(".", ",") + "° " + (p.lat >= 0 ? "LU" : "LS");
+    var lo = p.lon.toString().replace(".", ",") + "° BT";
+    return la + " · " + lo;
+  }
+
+  /* ---------- Materi ---------- */
+  var STAGES = [
+    {
+      id: "awal", short: "Awal", title: "Awal Kedatangan",
+      sub: "Catatan Cina, batu nisan, dan kisah pelancong.",
+      intro: "Belum ada satu tanggal pasti untuk kedatangan Islam. Yang ada adalah jejak: catatan dinasti, nisan, dan cerita penjelajah asing. Susun jejak itu dari yang paling tua.",
+      recap: [
+        "Jejak awal datang dari berita Cina, batu nisan, dan catatan pelancong asing.",
+        "Samudra Pasai tercatat sebagai kerajaan Islam pertama di Nusantara pada abad ke-13.",
+        "Para ahli masih berbeda pendapat tentang kapan Islam mulai menyebar luas."
+      ],
+      build: function () {
+        return [
+          { t: "choice", tag: "Abad ke-7 M", q: "Berita Cina dari masa Dinasti Tang menyebut pemukiman orang Ta-shih di pantai barat Sumatra. Siapa mereka?",
+            opts: ["Pedagang Arab", "Pedagang Portugis", "Pendeta Buddha dari India", "Utusan Kerajaan Majapahit"], a: 0,
+            why: "Ta-shih adalah sebutan Cina untuk orang Arab. Catatan ini menjadi salah satu dasar Teori Mekah." },
+          { t: "choice", tag: "1082 M · 475 H", q: "Makam Fatimah binti Maimun di Leran, Gresik, bertarikh 475 H. Apa artinya bagi sejarah?",
+            opts: ["Salah satu bukti tertua adanya orang Islam di pesisir Jawa", "Bukti berdirinya Kesultanan Demak", "Bukti bahwa Wali Songo sudah berdakwah", "Penanda runtuhnya Majapahit"], a: 0,
+            why: "Makam itu menunjukkan ada Muslim di pesisir Jawa sejak abad ke-11. Para ahli masih berdebat apakah ia pendatang atau warga setempat." },
+          { t: "choice", tag: "1292 M", q: "Marco Polo singgah di Perlak, Aceh. Apa yang ia catat tentang kota pelabuhan itu?",
+            opts: ["Penduduknya sudah memeluk Islam lewat pedagang Muslim", "Seluruh Sumatra sudah menjadi kerajaan Islam", "Tidak ada seorang Muslim pun di sana", "Penduduknya baru mengenal Islam dari Portugis"], a: 0,
+            why: "Marco Polo menulis bahwa penduduk kota itu memeluk Islam karena bergaul dengan pedagang Muslim." },
+          { t: "choice", tag: "1297 M · 696 H", q: "Nisan Sultan Malik as-Salih bertarikh 696 H. Ia adalah raja pertama kerajaan Islam mana?",
+            opts: ["Demak", "Samudra Pasai", "Mataram Islam", "Banten"], a: 1,
+            why: "Samudra Pasai di Aceh Utara berdiri pada abad ke-13. Nisan raja pertamanya adalah bukti tertulis yang paling jelas." },
+          { t: "choice", tag: "± 1345 M", q: "Penjelajah Maroko Ibnu Battutah singgah di Samudra Pasai. Siapa penguasa yang ia temui?",
+            opts: ["Sultan Malik az-Zahir", "Raden Patah", "Sultan Iskandar Muda", "Sultan Hasanuddin"], a: 0,
+            why: "Ibnu Battutah menggambarkan sultan yang gemar berdiskusi dengan ulama dan bermazhab Syafi'i." }
+        ];
+      }
+    },
+    {
+      id: "teori", short: "Teori", title: "Teori Kedatangan",
+      sub: "Dari Gujarat, Mekah, Persia, Benggala, atau Cina?",
+      intro: "Ahli sejarah mengajukan beberapa teori tentang asal pembawa Islam. Cocokkan setiap teori dengan ciri dan tokoh pendukungnya. Pilih satu teori dan satu ciri secara bergantian.",
+      recap: [
+        "Tidak ada satu teori yang diterima semua ahli sejarah.",
+        "Banyak sejarawan kini menilai Islam datang lewat banyak jalur dan dibawa pedagang dari berbagai negeri, bukan dari satu asal saja."
+      ],
+      build: function () {
+        return [{
+          t: "match",
+          pairs: [
+            { id: "gujarat", name: "Teori Gujarat", clue: "Dipelopori Snouck Hurgronje. Islam dibawa pedagang Gujarat (India) sekitar abad ke-13. Nisan Pasai dinilai mirip nisan di Cambay." },
+            { id: "mekah", name: "Teori Mekah", clue: "Didukung Hamka dan Seminar Medan 1963. Islam datang langsung dari Arab sejak abad ke-7, dengan dasar berita Cina tentang Ta-shih." },
+            { id: "persia", name: "Teori Persia", clue: "Dipelopori Hoesein Djajadiningrat. Tradisi 10 Muharram (tabut di Pariaman) dan ajaran sufi dinilai mirip budaya Persia." },
+            { id: "benggala", name: "Teori Benggala", clue: "Dipelopori S.Q. Fatimi. Makam Fatimah binti Maimun dinilai mirip nisan di Benggala (Bengal)." },
+            { id: "cina", name: "Teori Cina", clue: "Dipelopori Slamet Muljana. Menekankan peran pedagang Muslim Tionghoa dalam Islamisasi Jawa." }
+          ],
+          why: "Semua pasangan sudah tepat. Setiap teori punya bukti sendiri, dan tak satu pun menjelaskan seluruh Nusantara."
+        }];
+      }
+    },
+    {
+      id: "jalur", short: "Jalur", title: "Jalur Penyebaran",
+      sub: "Bandar-bandar di peta dan saluran dakwahnya.",
+      intro: "Islam menyebar lewat jalur laut: dari Selat Malaka ke Jawa, lalu ke Kalimantan, Sulawesi, dan Maluku. Tebak bandar di peta dari petunjuknya, lalu kenali saluran penyebarannya.",
+      recap: [
+        "Penyebaran bergerak dari Selat Malaka ke pantai utara Jawa, lalu ke Kalimantan, Sulawesi, dan Maluku.",
+        "Perdagangan menjadi saluran utama. Perkawinan, pendidikan, dan kesenian memperkuatnya."
+      ],
+      build: function () {
+        var maps = shuffle([
+          { id: "pasai", clue: "Kerajaan Islam pertama di Sumatra. Raja pertamanya, Sultan Malik as-Salih, wafat tahun 1297.", why: "Pasai berada di pintu masuk Selat Malaka, tempat kapal dari India dan Arab singgah." },
+          { id: "malaka", clue: "Bandar besar di selat. Penguasanya memeluk Islam pada abad ke-15 dan bandar ini menjadi pusat dagang dan dakwah.", why: "Dari Malaka, pedagang menyebarkan Islam ke Jawa, Kalimantan, dan Maluku. Portugis merebutnya pada 1511." },
+          { id: "gresik", clue: "Pelabuhan di pantai utara Jawa Timur. Maulana Malik Ibrahim, wali pertama Wali Songo, dimakamkan di sini.", why: "Maulana Malik Ibrahim wafat pada 1419. Gresik menjadi bandar dagang yang ramai." },
+          { id: "demak", clue: "Kesultanan Islam pertama di Jawa, didirikan Raden Patah. Masjid agungnya terkenal.", why: "Demak tumbuh pada awal abad ke-16, ketika Majapahit melemah." },
+          { id: "banten", clue: "Bandar lada di ujung barat Jawa. Sultan Hasanuddin memimpin kesultanan ini pada abad ke-16.", why: "Banten menjadi pelabuhan lada utama dan pusat penyebaran Islam di Jawa bagian barat." },
+          { id: "banjar", clue: "Kesultanan di Kalimantan Selatan. Sultan Suriansyah memeluk Islam dengan dukungan Demak.", why: "Banjar menjadi kesultanan Islam pada abad ke-16." },
+          { id: "gowa", clue: "Kerajaan kembar di Sulawesi Selatan yang resmi memeluk Islam pada 1605.", why: "Setelah itu Gowa-Tallo ikut menyebarkan Islam ke kerajaan-kerajaan di sekitarnya." },
+          { id: "ternate", clue: "Pulau kecil penghasil cengkih di Maluku Utara. Rajanya memeluk Islam dan bersaing dengan Tidore.", why: "Cengkih menarik pedagang Muslim, lalu bangsa Eropa. Ternate berkembang menjadi kesultanan." }
+        ]).slice(0, 5).map(function (m) { m.t = "map"; return m; });
+        var saluran = [
+          { t: "choice", tag: "Saluran penyebaran", q: "Pedagang Muslim berlabuh di bandar, menjual rempah, dan memperkenalkan Islam lewat pergaulan sehari-hari. Saluran apakah ini?",
+            opts: ["Perdagangan", "Perkawinan", "Pendidikan", "Kesenian"], a: 0, why: "Perdagangan adalah saluran paling awal dan paling luas, karena bandar mempertemukan banyak bangsa." },
+          { t: "choice", tag: "Saluran penyebaran", q: "Pedagang Muslim menikahi perempuan setempat, dan anak-anak mereka tumbuh sebagai Muslim. Saluran apakah ini?",
+            opts: ["Perkawinan", "Politik", "Pendidikan", "Perdagangan"], a: 0, why: "Perkawinan membentuk keluarga Muslim di sekitar bandar dan membuat Islam diterima secara damai." },
+          { t: "choice", tag: "Saluran penyebaran", q: "Pesantren, surau, dan dayah melahirkan ulama yang pulang ke kampung untuk mengajar. Saluran apakah ini?",
+            opts: ["Kesenian", "Pendidikan", "Perdagangan", "Perkawinan"], a: 1, why: "Lembaga pendidikan melahirkan guru dan ulama yang menyebarkan Islam hingga ke pedalaman." },
+          { t: "choice", tag: "Saluran penyebaran", q: "Sunan Kalijaga memakai wayang dan gamelan untuk memperkenalkan nilai-nilai Islam. Saluran apakah ini?",
+            opts: ["Politik", "Perdagangan", "Kesenian", "Pendidikan"], a: 2, why: "Kesenian yang sudah akrab bagi rakyat menjadi jembatan yang lembut untuk dakwah." }
+        ];
+        return maps.concat(saluran);
+      }
+    },
+    {
+      id: "dampak", short: "Dampak", title: "Dampak dan Pengaruh",
+      sub: "Politik, hukum, seni, pendidikan, dan bahasa.",
+      intro: "Kedatangan Islam mengubah banyak bidang kehidupan. Tentukan setiap dampak masuk ke bidang yang mana.",
+      recap: [
+        "Islam mengubah politik, hukum, seni, pendidikan, dan bahasa di Nusantara.",
+        "Islam berpadu dengan budaya setempat, sehingga lahir corak Islam yang khas Nusantara."
+      ],
+      build: function () {
+        var cats = ["Politik & Ekonomi", "Sosial & Hukum", "Seni & Arsitektur", "Pendidikan & Bahasa"];
+        var pool = [
+          { text: "Berdiri kesultanan seperti Demak, Banten, Aceh, dan Gowa-Tallo.", a: 0, why: "Kerajaan Islam menggantikan atau berdampingan dengan kerajaan Hindu-Buddha, dan raja bergelar sultan." },
+          { text: "Bandar-bandar Muslim di pesisir menjadi pusat perdagangan rempah.", a: 0, why: "Jaringan dagang Muslim menghubungkan Nusantara dengan India, Arab, dan Cina." },
+          { text: "Sistem kasta melemah karena Islam mengajarkan kesetaraan di hadapan Allah.", a: 1, why: "Ajaran ini menarik banyak rakyat biasa dan mengubah tata hubungan sosial." },
+          { text: "Hukum Islam memengaruhi aturan perkawinan dan waris di banyak daerah.", a: 1, why: "Hukum Islam berpadu dengan hukum adat, misalnya di Aceh dan Minangkabau." },
+          { text: "Sunan Kalijaga memakai wayang dan gamelan untuk berdakwah.", a: 2, why: "Wayang sudah ada sebelum Islam. Cerita dan nilainya disesuaikan dengan ajaran Islam." },
+          { text: "Masjid Agung Demak memakai atap tumpang bersusun seperti bangunan setempat.", a: 2, why: "Bentuk masjid ini memadukan tradisi bangunan lokal dengan fungsi masjid." },
+          { text: "Seni kaligrafi menghiasi nisan, masjid, dan naskah.", a: 2, why: "Kaligrafi Arab menjadi unsur seni baru di Nusantara." },
+          { text: "Pesantren, surau, dan dayah menjadi pusat belajar agama.", a: 3, why: "Lembaga ini menjadi cikal bakal pendidikan Islam di Nusantara." },
+          { text: "Huruf Arab-Melayu (Jawi) dan Pegon dipakai menulis bahasa daerah.", a: 3, why: "Aksara ini dipakai untuk hikayat, kitab, dan surat-menyurat kesultanan." },
+          { text: "Kata serapan Arab seperti kitab, ilmu, dan adil masuk ke bahasa Melayu.", a: 3, why: "Banyak kata dari Arab hidup sampai sekarang dalam bahasa Indonesia." }
+        ];
+        return shuffle(pool).slice(0, 6).map(function (p) {
+          return { t: "sort", tag: "Dampak untuk bidang apa?", q: p.text, opts: cats, a: p.a, why: p.why };
+        });
+      }
+    }
+  ];
+
+  /* ---------- Keadaan permainan ---------- */
+  var S = null;
+  function newRun(playlist) {
+    S = { playlist: playlist, pi: 0, qi: 0, score: 0, streak: 0, maxStreak: 0, items: [], tally: [], stage: null, single: playlist.length === 1 };
+  }
+  function hud() {
+    $("#score").textContent = S ? S.score : 0;
+    $("#streak").textContent = S ? S.streak : 0;
+  }
+  function renderTrack() {
+    var cur = S && S.stage ? STAGES.indexOf(S.stage) : -1;
+    $("#track").innerHTML = STAGES.map(function (st, i) {
+      var cls = "";
+      if (S && S.tally[i] && S.tally[i].done) cls = "done";
+      else if (i === cur) cls = "now";
+      return '<li class="' + cls + '"><span class="bar"></span><span class="lbl">' + esc(st.short) + "</span></li>";
+    }).join("");
+  }
+  function view(html) {
+    $("#view").innerHTML = html;
+    try { window.scrollTo({ top: 0 }); } catch (e) {}
+  }
+  function award(ok, countOk) {
+    var cur = S.tally[STAGES.indexOf(S.stage)];
+    if (ok) {
+      S.score += 100 + 20 * Math.min(S.streak, 5);
+      S.streak++;
+      if (S.streak > S.maxStreak) S.maxStreak = S.streak;
+    } else {
+      S.streak = 0;
+    }
+    if (countOk !== null) {
+      cur.total++;
+      if (countOk) cur.ok++;
+    }
+    hud();
+  }
+
+  /* ---------- Layar ---------- */
+  function menu() {
+    S = null; hud(); renderTrack();
+    var best = loadBest();
+    view(
+      '<section class="card">' +
+        '<h2>Ikuti jalur dagang yang membawa Islam ke Nusantara</h2>' +
+        '<p>Jawab soal di empat bagian: awal kedatangan, teori kedatangan, jalur penyebaran, dan dampaknya. Jawaban benar menambah skor, dan jawaban benar beruntun menambah bonus.</p>' +
+        '<button class="btn" id="startAll">Mulai berlayar</button>' +
+        '<p class="hint">Atau pilih satu bagian saja:</p>' +
+        '<div class="stages">' +
+        STAGES.map(function (st, i) {
+          return '<button class="stg" data-i="' + i + '"><span><b>' + esc(st.title) + '</b><span class="sub">' + esc(st.sub) + '</span></span><span class="stars" aria-label="' + (best[st.id] || 0) + ' dari 3 bintang">' + stars(best[st.id] || 0) + "</span></button>";
+        }).join("") +
+        "</div>" +
+      "</section>"
+    );
+    $("#startAll").onclick = function () { newRun([0, 1, 2, 3]); stageIntro(); };
+    Array.prototype.forEach.call(document.querySelectorAll(".stg"), function (b) {
+      b.onclick = function () { newRun([Number(b.dataset.i)]); stageIntro(); };
+    });
+  }
+
+  function stageIntro() {
+    var st = STAGES[S.playlist[S.pi]];
+    S.stage = st;
+    var idx = STAGES.indexOf(st);
+    S.tally[idx] = { ok: 0, total: 0, done: false };
+    S.items = st.build();
+    S.qi = 0;
+    renderTrack();
+    view(
+      '<section class="card">' +
+        '<div class="meta"><span>Bagian ' + (idx + 1) + " dari 4</span><span>" + (st.id === "teori" ? "5 pasangan" : S.items.length + " soal") + "</span></div>" +
+        "<h2>" + esc(st.title) + "</h2>" +
+        "<p>" + esc(st.intro) + "</p>" +
+        '<button class="btn" id="go">Mulai bagian ini</button>' +
+      "</section>"
+    );
+    $("#go").onclick = renderItem;
+  }
+
+  function frame(inner, label) {
+    var pct = Math.round(S.qi / S.items.length * 100);
+    return '<section class="card">' +
+      '<div class="meta"><span>' + esc(S.stage.title) + "</span><span>" + esc(label) + "</span></div>" +
+      '<div class="prog"><i style="width:' + pct + '%"></i></div>' +
+      inner +
+      '<div id="fb" aria-live="polite"></div>' +
+    "</section>";
+  }
+
+  function renderItem() {
+    var it = S.items[S.qi];
+    if (it.t === "choice" || it.t === "sort") viewChoice(it);
+    else if (it.t === "match") viewMatch(it);
+    else if (it.t === "map") viewMap(it);
+  }
+
+  function fb(ok, title, body, extra) {
+    var last = S.qi >= S.items.length - 1;
+    $("#fb").innerHTML =
+      '<div class="fb ' + (ok ? "ok" : "bad") + '"><strong>' + esc(title) + "</strong>" +
+      "<span>" + esc(body) + "</span>" +
+      (extra ? '<span class="coord">' + esc(extra) + "</span>" : "") +
+      '<button class="btn" id="next">' + (last ? "Selesai bagian ini" : "Lanjut") + "</button></div>";
+    var n = $("#next");
+    n.onclick = nextItem;
+    n.focus({ preventScroll: false });
+  }
+  function nextItem() {
+    S.qi++;
+    if (S.qi >= S.items.length) finishStage(); else renderItem();
+  }
+
+  /* Pilihan ganda dan penggolongan */
+  function viewChoice(it) {
+    var isSort = it.t === "sort";
+    var opts = it.opts.map(function (t, i) { return { t: t, ok: i === it.a }; });
+    if (!isSort) opts = shuffle(opts);
+    view(frame(
+      '<span class="era">' + esc(it.tag) + "</span>" +
+      '<p class="q">' + esc(it.q) + "</p>" +
+      '<div class="opts' + (isSort ? " grid" : "") + '" id="opts">' +
+      opts.map(function (o, i) { return '<button class="opt" data-i="' + i + '">' + esc(o.t) + "</button>"; }).join("") +
+      "</div>",
+      "Soal " + (S.qi + 1) + " dari " + S.items.length
+    ));
+    var btns = document.querySelectorAll("#opts .opt");
+    Array.prototype.forEach.call(btns, function (b) {
+      b.onclick = function () {
+        var o = opts[Number(b.dataset.i)];
+        Array.prototype.forEach.call(btns, function (x) {
+          var xo = opts[Number(x.dataset.i)];
+          x.disabled = true;
+          if (xo.ok) x.classList.add("ok");
+          else if (x === b) x.classList.add("bad");
+          else x.classList.add("dim");
+        });
+        award(o.ok, o.ok);
+        var right = opts.filter(function (x) { return x.ok; })[0].t;
+        fb(o.ok, o.ok ? "Tepat" : "Belum tepat", (o.ok ? "" : "Jawaban yang benar: " + right + ". ") + it.why);
+      };
+    });
+  }
+
+  /* Pencocokan teori */
+  function viewMatch(it) {
+    var clues = shuffle(it.pairs);
+    var selT = null, selC = null, done = {}, count = 0, mist = {};
+    view(frame(
+      '<p class="q">Cocokkan setiap teori dengan cirinya.</p>' +
+      '<p class="hint">Pilih satu teori dan satu ciri, urutannya bebas.</p>' +
+      '<div class="chips" id="th">' +
+      it.pairs.map(function (p) { return '<button class="chip" data-id="' + p.id + '">' + esc(p.name) + "</button>"; }).join("") +
+      "</div>" +
+      '<div class="clues" id="cl">' +
+      clues.map(function (p) { return '<button class="clue" data-id="' + p.id + '">' + esc(p.clue) + "</button>"; }).join("") +
+      "</div>",
+      "Cocokkan teori"
+    ));
+    var chips = document.querySelectorAll("#th .chip");
+    var cls = document.querySelectorAll("#cl .clue");
+    function byId(list, id) { return Array.prototype.filter.call(list, function (x) { return x.dataset.id === id; })[0]; }
+    function clearSel() {
+      Array.prototype.forEach.call(chips, function (x) { x.classList.remove("sel"); });
+      Array.prototype.forEach.call(cls, function (x) { x.classList.remove("sel"); });
+      selT = null; selC = null;
+    }
+    function check() {
+      if (!selT || !selC) return;
+      if (selT === selC) {
+        var c = byId(chips, selT), l = byId(cls, selC);
+        c.classList.remove("sel"); l.classList.remove("sel");
+        c.classList.add("ok"); l.classList.add("ok");
+        c.disabled = true; l.disabled = true;
+        done[selT] = true; count++;
+        award(true, !mist[selT]);
+        var id = selT;
+        selT = null; selC = null;
+        if (count === it.pairs.length) {
+          var last = S.qi >= S.items.length - 1;
+          fb(true, "Semua pasangan tepat", it.why);
+        }
+        return id;
+      }
+      var wc = byId(chips, selT), wl = byId(cls, selC);
+      mist[selC] = true;
+      wc.classList.add("shake"); wl.classList.add("shake");
+      award(false, null);
+      setTimeout(function () {
+        wc.classList.remove("shake"); wl.classList.remove("shake");
+        clearSel();
+      }, 450);
+    }
+    Array.prototype.forEach.call(chips, function (b) {
+      b.onclick = function () {
+        if (selT === b.dataset.id) { b.classList.remove("sel"); selT = null; return; }
+        Array.prototype.forEach.call(chips, function (x) { x.classList.remove("sel"); });
+        b.classList.add("sel"); selT = b.dataset.id; check();
+      };
+    });
+    Array.prototype.forEach.call(cls, function (b) {
+      b.onclick = function () {
+        if (selC === b.dataset.id) { b.classList.remove("sel"); selC = null; return; }
+        Array.prototype.forEach.call(cls, function (x) { x.classList.remove("sel"); });
+        b.classList.add("sel"); selC = b.dataset.id; check();
+      };
+    });
+  }
+
+  /* Peta bandar */
+  function viewMap(it) {
+    var mapItems = S.items.filter(function (x) { return x.t === "map"; });
+    var mi = mapItems.indexOf(it) + 1;
+    var pts = ROUTE.map(function (id) { var p = portById(id); var xy = proj(p.lat, p.lon); return xy[0].toFixed(1) + "," + xy[1].toFixed(1); });
+    pts.unshift("0,70");
+    var grid = "";
+    [5, 0, -5].forEach(function (la) {
+      var y = (8 - la) * PX + 30;
+      grid += '<line class="' + (la === 0 ? "equator" : "grid") + '" x1="0" y1="' + y.toFixed(1) + '" x2="' + VW + '" y2="' + y.toFixed(1) + '"/>';
+    });
+    [100, 110, 120].forEach(function (lo) {
+      var x = (lo - 94) / 35 * 660 + 20;
+      grid += '<line class="grid" x1="' + x.toFixed(1) + '" y1="0" x2="' + x.toFixed(1) + '" y2="' + VH + '"/>';
+    });
+    var ports = PORTS.map(function (p) {
+      var xy = proj(p.lat, p.lon);
+      return '<button class="port" data-id="' + p.id + '" aria-label="' + esc(p.name) + '" style="left:' + (xy[0] / VW * 100).toFixed(2) + "%;top:" + (xy[1] / VH * 100).toFixed(2) + '%">' +
+        '<span class="dot"></span><span class="nm ' + p.pos + '">' + esc(p.name) + "</span></button>";
+    }).join("");
+    view(frame(
+      '<span class="era">Petunjuk bandar</span>' +
+      '<p class="q">' + esc(it.clue) + "</p>" +
+      '<div class="chart" id="chart">' +
+        '<svg viewBox="0 0 ' + VW + " " + VH + '" preserveAspectRatio="none" aria-hidden="true">' + grid + '<polyline class="route" points="' + pts.join(" ") + '"/></svg>' +
+        '<span class="src">dari India, Arab, dan Persia</span>' + ports +
+      "</div>" +
+      '<span class="cap">Peta laut, bukan skala sebenarnya. Garis putus-putus menunjukkan arah penyebaran. Ketuk bandar yang dimaksud.</span>',
+      "Peta " + mi + " dari " + mapItems.length
+    ));
+    var btns = document.querySelectorAll("#chart .port");
+    Array.prototype.forEach.call(btns, function (b) {
+      b.onclick = function () {
+        var ok = b.dataset.id === it.id;
+        Array.prototype.forEach.call(btns, function (x) {
+          x.disabled = true;
+          if (x.dataset.id === it.id) x.classList.add("ok");
+          else if (x === b) x.classList.add("bad");
+          else x.classList.add("dim");
+        });
+        award(ok, ok);
+        var right = portById(it.id);
+        fb(ok, ok ? "Tepat" : "Belum tepat", (ok ? "" : "Yang dimaksud adalah " + right.name + ". ") + it.why, right.name + " · " + fmtCoord(right));
+      };
+    });
+  }
+
+  /* Ringkasan bagian */
+  function finishStage() {
+    var idx = STAGES.indexOf(S.stage);
+    var t = S.tally[idx];
+    t.done = true;
+    var acc = t.total ? t.ok / t.total : 0;
+    var n = acc >= 0.9 ? 3 : acc >= 0.6 ? 2 : acc >= 0.35 ? 1 : 0;
+    t.stars = n;
+    saveBest(S.stage.id, n);
+    renderTrack();
+    var more = S.pi < S.playlist.length - 1;
+    view(
+      '<section class="card">' +
+        '<div class="meta"><span>Bagian selesai</span><span>' + esc(S.stage.title) + "</span></div>" +
+        '<div class="stars big" aria-label="' + n + ' dari 3 bintang">' + stars(n) + "</div>" +
+        '<div class="stats">' +
+          "<div><span>Benar</span><b>" + t.ok + " / " + t.total + "</b></div>" +
+          "<div><span>Skor</span><b>" + S.score + "</b></div>" +
+          "<div><span>Beruntun terbaik</span><b>" + S.maxStreak + "</b></div>" +
+        "</div>" +
+        '<h2 style="font-size:1.1rem">Catatan pelayaran</h2>' +
+        '<ul class="recap">' + S.stage.recap.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>" +
+        '<div class="row">' +
+          '<button class="btn" id="cont">' + (more ? "Bagian berikutnya" : S.single ? "Kembali ke menu" : "Lihat hasil akhir") + "</button>" +
+          (S.single ? '<button class="btn ghost" id="again">Ulangi bagian ini</button>' : "") +
+        "</div>" +
+      "</section>"
+    );
+    $("#cont").onclick = function () {
+      if (more) { S.pi++; stageIntro(); }
+      else if (S.single) menu();
+      else finishRun();
+    };
+    if (S.single) $("#again").onclick = function () { newRun(S.playlist.slice()); stageIntro(); };
+  }
+
+  function finishRun() {
+    var ok = 0, total = 0;
+    S.tally.forEach(function (t) { if (t) { ok += t.ok; total += t.total; } });
+    var acc = total ? ok / total : 0;
+    var rank = acc >= 0.85 ? "Nakhoda" : acc >= 0.6 ? "Juru Mudi" : "Awak Kapal";
+    var msg = acc >= 0.85 ? "Kamu hafal jalur pelayaran sejarah ini dengan baik."
+            : acc >= 0.6 ? "Pelayaranmu sudah mantap. Ulangi bagian yang masih meragukan."
+            : "Pelayaran baru dimulai. Ulangi bagian demi bagian untuk memperkuat ingatan.";
+    view(
+      '<section class="card">' +
+        '<div class="meta"><span>Hasil akhir</span><span>' + Math.round(acc * 100) + "% tepat</span></div>" +
+        '<div class="big">' + rank + "</div>" +
+        "<p>" + msg + "</p>" +
+        '<div class="stats">' +
+          "<div><span>Skor</span><b>" + S.score + "</b></div>" +
+          "<div><span>Benar</span><b>" + ok + " / " + total + "</b></div>" +
+          "<div><span>Beruntun terbaik</span><b>" + S.maxStreak + "</b></div>" +
+        "</div>" +
+        '<div class="stages">' +
+        STAGES.map(function (st, i) {
+          var t = S.tally[i] || { stars: 0 };
+          return '<div class="stg" style="cursor:default"><span><b>' + esc(st.title) + '</b></span><span class="stars">' + stars(t.stars || 0) + "</span></div>";
+        }).join("") +
+        "</div>" +
+        '<div class="row"><button class="btn" id="redo">Berlayar lagi</button><button class="btn ghost" id="home">Menu</button></div>' +
+      "</section>"
+    );
+    $("#redo").onclick = function () { newRun([0, 1, 2, 3]); stageIntro(); };
+    $("#home").onclick = menu;
+  }
+
+  menu();
+})();
+</script>
+
+</body></html>
